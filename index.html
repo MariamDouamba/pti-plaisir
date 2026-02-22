@@ -1741,7 +1741,7 @@ async function exportExcel(){
 
   // ── Feuille 3 : CLIENTS
   const clients=getClients();
-  const cliData=[['Client','Téléphone','Nb achats','Chiffre d'Affaires ('+cur+')','Catégorie']];
+  const cliData=[['Client','Téléphone','Nb achats',"Chiffre d'Affaires ("+cur+")",'Catégorie']];
   clients.forEach(c=>{
     cliData.push([c.name,c.tel||'',c.count,c.ca,c.count===1?'Nouveau':'Fidèle']);
   });
@@ -1780,7 +1780,7 @@ async function exportExcel(){
     ['',''],
     ['VENTES',''],
     ['Nombre de ventes',ventesP.length],
-    ['Chiffre d'affaires total',caTotal+' '+cur],
+    ["Chiffre d'affaires total",caTotal+' '+cur],
     ['Panier moyen',ventesP.length?Math.round(caTotal/ventesP.length)+' '+cur:'—'],
     ['Clients uniques',new Set(ventesP.map(v=>v.client_nom.toLowerCase())).size],
     ['',''],
