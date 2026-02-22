@@ -19,6 +19,8 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <!-- jsPDF pour génération PDF -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<!-- SheetJS pour export Excel -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
 :root{
   --bg:#0c0a07;--surf:#141109;--surf2:#1d1710;--surf3:#251f14;
@@ -287,6 +289,20 @@ select option{background:#1d1710;}
 <!-- ══════════════════════════════════════
      LOGIN SCREEN
 ══════════════════════════════════════ -->
+<!-- BANNIÈRE ALERTES CRÉDIT -->
+<div id="credit-alert-banner" style="display:none;position:fixed;top:56px;left:0;right:0;z-index:100;background:linear-gradient(135deg,rgba(184,80,48,.95),rgba(150,50,20,.95));backdrop-filter:blur(8px);padding:0;border-bottom:1px solid rgba(184,80,48,.5);">
+  <div style="max-width:860px;margin:0 auto;padding:10px 16px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
+    <div style="display:flex;align-items:center;gap:8px;flex:1;min-width:0;">
+      <span style="font-size:1.1rem;">🔔</span>
+      <div id="credit-alert-text" style="font-size:.8rem;color:#fff;line-height:1.4;"></div>
+    </div>
+    <div style="display:flex;gap:7px;flex-shrink:0;">
+      <button onclick="goPage('credits',document.querySelectorAll('.bn-tab')[3]);closeCreditBanner()" class="btn btn-sm" style="background:#fff;color:#b85030;font-weight:700;border:none;">Voir les crédits</button>
+      <button onclick="closeCreditBanner()" style="background:none;border:none;color:rgba(255,255,255,.7);cursor:pointer;font-size:1.1rem;line-height:1;padding:4px;">✕</button>
+    </div>
+  </div>
+</div>
+
 <div id="login-screen">
   <div class="login-box">
     <div class="login-brand">Pti-<em>plaisir</em></div>
@@ -500,6 +516,33 @@ select option{background:#1d1710;}
         <button class="btn btn-ghost btn-sm" onclick="addCat()">Ajouter</button>
       </div>
     </div>
+    <div class="fcard">
+      <div class="stitle">📊 Export Excel</div>
+      <div style="font-size:.8rem;color:var(--txt-d);margin-bottom:14px;line-height:1.6;">
+        Exportez vos données dans un fichier Excel (.xlsx) avec plusieurs feuilles.
+      </div>
+      <div class="fgrid">
+        <div class="fg">
+          <label>Période</label>
+          <select id="export-period">
+            <option value="all">Toutes les données</option>
+            <option value="month">Ce mois</option>
+            <option value="year">Cette année</option>
+          </select>
+        </div>
+        <div class="fg" style="justify-content:flex-end;padding-top:18px;">
+          <button class="btn btn-green" onclick="exportExcel()" id="btn-export-excel">
+            📊 Télécharger Excel
+          </button>
+        </div>
+      </div>
+      <div style="margin-top:10px;display:flex;flex-wrap:wrap;gap:6px;font-size:.75rem;color:var(--txt-m);">
+        <span style="background:var(--surf2);border:1px solid var(--border);border-radius:8px;padding:3px 9px;">✅ Ventes + articles</span>
+        <span style="background:var(--surf2);border:1px solid var(--border);border-radius:8px;padding:3px 9px;">✅ Clients & CA</span>
+        <span style="background:var(--surf2);border:1px solid var(--border);border-radius:8px;padding:3px 9px;">✅ Crédits en cours</span>
+        <span style="background:var(--surf2);border:1px solid var(--border);border-radius:8px;padding:3px 9px;">✅ Stock tissu</span>
+      </div>
+    </div>
   </div>
 
 </div><!-- end scroller -->
@@ -669,6 +712,7 @@ async function initApp(){
   await Promise.all([loadVentes(), loadCredits(), loadStock()]);
   refreshDash();
   updateBadges();
+  checkCreditAlerts();
 }
 
 // ════════════════════════════════════════════════
@@ -1530,6 +1574,172 @@ function toast(msg){
   t.className='toast';t.textContent=msg;
   document.body.appendChild(t);
   setTimeout(()=>t.remove(),2800);
+}
+
+// ════════════════════════════════════════════════
+//  EXPORT EXCEL
+// ════════════════════════════════════════════════
+async function exportExcel(){
+  const btn=document.getElementById('btn-export-excel');
+  btn.disabled=true; btn.textContent='⏳ Génération…';
+
+  const period=document.getElementById('export-period').value;
+  const now=new Date();
+  const filterDate=(d)=>{
+    const dd=new Date(d+'T12:00:00');
+    if(period==='month') return dd.getMonth()===now.getMonth()&&dd.getFullYear()===now.getFullYear();
+    if(period==='year') return dd.getFullYear()===now.getFullYear();
+    return true;
+  };
+
+  const wb=XLSX.utils.book_new();
+  const cur=params.currency||'FCFA';
+
+  // ── Feuille 1 : VENTES
+  const ventesData=[['ID Vente','Date','Client','Téléphone','Vendeur','Paiement','Statut','Sous-total','Remise','Total','Réf','Note']];
+  _ventes.filter(v=>filterDate(v.date_vente)).forEach(v=>{
+    ventesData.push([v.id,v.date_vente,v.client_nom,v.client_tel||'',v.vendeur_nom||'',v.paiement,v.statut_paiement,v.sous_total,v.remise,v.total,v.ref||'',v.note||'']);
+  });
+  const wsVentes=XLSX.utils.aoa_to_sheet(ventesData);
+  wsVentes['!cols']=[{wch:14},{wch:12},{wch:20},{wch:16},{wch:16},{wch:14},{wch:10},{wch:12},{wch:10},{wch:12},{wch:12},{wch:20}];
+  XLSX.utils.book_append_sheet(wb,wsVentes,'Ventes');
+
+  // ── Feuille 2 : DÉTAIL ARTICLES
+  const artsData=[['ID Vente','Date','Client','Article','Unité','Quantité','Prix unitaire','Total']];
+  _ventes.filter(v=>filterDate(v.date_vente)).forEach(v=>{
+    (v.articles_vente||[]).forEach(a=>{
+      artsData.push([v.id,v.date_vente,v.client_nom,a.nom,a.unite,a.quantite,a.prix_unitaire,a.total]);
+    });
+  });
+  const wsArts=XLSX.utils.aoa_to_sheet(artsData);
+  wsArts['!cols']=[{wch:14},{wch:12},{wch:20},{wch:24},{wch:8},{wch:8},{wch:14},{wch:12}];
+  XLSX.utils.book_append_sheet(wb,wsArts,'Détail Articles');
+
+  // ── Feuille 3 : CLIENTS
+  const clients=getClients();
+  const cliData=[['Client','Téléphone','Nb achats','Chiffre d'Affaires ('+cur+')','Catégorie']];
+  clients.forEach(c=>{
+    cliData.push([c.name,c.tel||'',c.count,c.ca,c.count===1?'Nouveau':'Fidèle']);
+  });
+  const wsCli=XLSX.utils.aoa_to_sheet(cliData);
+  wsCli['!cols']=[{wch:22},{wch:16},{wch:10},{wch:20},{wch:10}];
+  XLSX.utils.book_append_sheet(wb,wsCli,'Clients');
+
+  // ── Feuille 4 : CRÉDITS
+  const crData=[['Client','Téléphone','Vente ID','Total','Reçu','Restant','Statut','Échéance']];
+  _credits.forEach(c=>{
+    crData.push([c.client_nom,c.client_tel||'',c.vente_id,c.montant_total,c.montant_recu,c.montant_restant,c.statut,c.date_echeance||'']);
+  });
+  const wsCr=XLSX.utils.aoa_to_sheet(crData);
+  wsCr['!cols']=[{wch:22},{wch:16},{wch:14},{wch:12},{wch:12},{wch:12},{wch:10},{wch:12}];
+  XLSX.utils.book_append_sheet(wb,wsCr,'Crédits');
+
+  // ── Feuille 5 : STOCK
+  const stData=[['Tissu','Catégorie','Unité','Quantité','Seuil alerte','Statut','Prix achat ('+cur+')','Prix vente ('+cur+')']];
+  _stock.forEach(s=>{
+    const statut=s.quantite===0?'Épuisé':s.quantite<=s.seuil_alerte?'Stock faible':'OK';
+    stData.push([s.nom,s.categorie||'',s.unite,s.quantite,s.seuil_alerte,statut,s.prix_achat,s.prix_vente]);
+  });
+  const wsSt=XLSX.utils.aoa_to_sheet(stData);
+  wsSt['!cols']=[{wch:26},{wch:14},{wch:8},{wch:10},{wch:12},{wch:12},{wch:16},{wch:16}];
+  XLSX.utils.book_append_sheet(wb,wsSt,'Stock');
+
+  // ── Feuille 6 : RÉSUMÉ
+  const ventesP=_ventes.filter(v=>filterDate(v.date_vente));
+  const caTotal=ventesP.reduce((s,v)=>s+v.total,0);
+  const creditTotal=_credits.filter(c=>c.statut!=='soldé').reduce((s,c)=>s+c.montant_restant,0);
+  const periodLabel=period==='month'?'Ce mois':period==='year'?'Cette année':'Toutes périodes';
+  const resumeData=[
+    ['RÉSUMÉ — Pti-plaisir',''],
+    ['Période',periodLabel],
+    ['Date export',new Date().toLocaleDateString('fr-FR')],
+    ['',''],
+    ['VENTES',''],
+    ['Nombre de ventes',ventesP.length],
+    ['Chiffre d'affaires total',caTotal+' '+cur],
+    ['Panier moyen',ventesP.length?Math.round(caTotal/ventesP.length)+' '+cur:'—'],
+    ['Clients uniques',new Set(ventesP.map(v=>v.client_nom.toLowerCase())).size],
+    ['',''],
+    ['CRÉDITS',''],
+    ['Crédits ouverts',_credits.filter(c=>c.statut!=='soldé').length],
+    ['Montant total à récupérer',creditTotal+' '+cur],
+    ['',''],
+    ['STOCK',''],
+    ['Références en stock',_stock.length],
+    ['Articles en stock faible',_stock.filter(s=>s.quantite<=s.seuil_alerte&&s.quantite>0).length],
+    ['Articles épuisés',_stock.filter(s=>s.quantite===0).length],
+  ];
+  const wsResume=XLSX.utils.aoa_to_sheet(resumeData);
+  wsResume['!cols']=[{wch:28},{wch:22}];
+  XLSX.utils.book_append_sheet(wb,wsResume,'Résumé');
+
+  const filename=`Pti-plaisir_Export_${new Date().toISOString().split('T')[0]}.xlsx`;
+  XLSX.writeFile(wb,filename);
+  btn.disabled=false; btn.textContent='📊 Télécharger Excel';
+  toast('✅ Fichier Excel téléchargé !');
+}
+
+// ════════════════════════════════════════════════
+//  NOTIFICATIONS CRÉDIT
+// ════════════════════════════════════════════════
+let _creditBannerClosed=false;
+
+function checkCreditAlerts(){
+  if(_creditBannerClosed) return;
+  const now=new Date(); now.setHours(0,0,0,0);
+  const in3=new Date(now); in3.setDate(in3.getDate()+3);
+
+  const alertes=[];
+  _credits.filter(c=>c.statut!=='soldé').forEach(c=>{
+    if(!c.date_echeance) return;
+    const ech=new Date(c.date_echeance+'T00:00:00');
+    if(ech<now){
+      alertes.push({client:c.client_nom,montant:c.montant_restant,type:'retard',ech:c.date_echeance});
+    } else if(ech<=in3){
+      const diff=Math.round((ech-now)/(1000*60*60*24));
+      alertes.push({client:c.client_nom,montant:c.montant_restant,type:'bientot',diff,ech:c.date_echeance});
+    }
+  });
+
+  if(!alertes.length) return;
+
+  const retards=alertes.filter(a=>a.type==='retard');
+  const bientot=alertes.filter(a=>a.type==='bientot');
+  let msg='';
+  if(retards.length){
+    msg+=`<strong>⚠️ ${retards.length} crédit(s) en retard :</strong> `;
+    msg+=retards.map(a=>`${a.client} (${a.montant.toLocaleString('fr-FR')} ${params.currency||'FCFA'})`).join(', ')+'. ';
+  }
+  if(bientot.length){
+    msg+=`<strong>📅 ${bientot.length} crédit(s) à échéance dans 3 jours :</strong> `;
+    msg+=bientot.map(a=>`${a.client} (${a.diff===0?'aujourd'hui':a.diff+' j'})`).join(', ')+'.';
+  }
+
+  document.getElementById('credit-alert-text').innerHTML=msg;
+  document.getElementById('credit-alert-banner').style.display='block';
+
+  // Email au patron si applicable
+  if(currentProfile?.role==='patron' && alertes.some(a=>a.type==='retard')){
+    sendCreditEmailAlert(retards);
+  }
+}
+
+function closeCreditBanner(){
+  _creditBannerClosed=true;
+  document.getElementById('credit-alert-banner').style.display='none';
+}
+
+async function sendCreditEmailAlert(retards){
+  // Utilise Supabase Edge Function ou simplement log
+  // Pour activer les emails, configurer Resend ou SMTP dans Supabase
+  // Pour l'instant on stocke l'alerte dans la DB pour trace
+  try {
+    const msg=retards.map(a=>`${a.client}: ${a.montant.toLocaleString('fr-FR')} ${params.currency||'FCFA'} (échéance: ${a.ech})`).join('\n');
+    await sb.from('parametres').update({
+      derniere_alerte: new Date().toISOString(),
+      alerte_msg: msg
+    }).eq('id',1);
+  } catch(e){ /* silencieux */ }
 }
 
 // ── SERVICE WORKER (PWA) ──
