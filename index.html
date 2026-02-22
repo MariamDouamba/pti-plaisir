@@ -599,6 +599,18 @@ select option{background:#1d1710;}
         <button class="btn btn-primary" onclick="saveParams()">💾 Sauvegarder</button>
       </div>
     </div>
+    <div class="fcard">
+      <div class="stitle">🔑 Changer mon mot de passe</div>
+      <div class="fgrid">
+        <div class="fg"><label>Nouveau mot de passe *</label><input id="new-pass-1" type="password" placeholder="Min. 6 caractères"></div>
+        <div class="fg"><label>Confirmer le mot de passe *</label><input id="new-pass-2" type="password" placeholder="Répéter le mot de passe"></div>
+      </div>
+      <div id="pass-err" style="display:none;margin-top:8px;background:rgba(184,80,48,.15);border:1px solid rgba(184,80,48,.3);color:var(--terra-l);border-radius:var(--r2);padding:9px 12px;font-size:.8rem;"></div>
+      <div id="pass-ok" style="display:none;margin-top:8px;background:rgba(77,122,90,.15);border:1px solid rgba(77,122,90,.3);color:var(--green-l);border-radius:var(--r2);padding:9px 12px;font-size:.8rem;">✅ Mot de passe changé avec succès !</div>
+      <div class="btn-row">
+        <button class="btn btn-ghost" id="btn-change-pass" onclick="changePassword()">🔑 Mettre à jour</button>
+      </div>
+    </div>
     <div class="fcard" id="patron-section" style="display:none;">
       <div class="stitle">👥 Mes Vendeurs</div>
       <div id="vendeurs-list" style="margin-bottom:18px;"></div>
@@ -1832,11 +1844,11 @@ function checkCreditAlerts(){
   let msg='';
   if(retards.length){
     msg+=`<strong>⚠️ ${retards.length} crédit(s) en retard :</strong> `;
-    msg+=retards.map(a=>`${a.client} (${a.montant.toLocaleString('fr-FR')} ${params.currency||'FCFA'})`).join(', ')+'. ';
+    msg+=retards.map(a=>`${a.client} (${a.montant.toLocaleString('fr-FR')} ${params.currency||'FCFA'})`).join(', ')+'. ';;
   }
   if(bientot.length){
     msg+=`<strong>📅 ${bientot.length} crédit(s) à échéance dans 3 jours :</strong> `;
-    msg+=bientot.map(a=>`${a.client} (${a.diff===0?"aujourd'hui":a.diff+' j'})`).join(', ')+'.';
+    msg+=bientot.map(a=>`${a.client} (${a.diff===0?"aujourd'hui":a.diff+" j"})`).join(", ")+".";
   }
 
   document.getElementById('credit-alert-text').innerHTML=msg;
@@ -2145,6 +2157,38 @@ function renderTop5(){
     </div>`).join('');
 }
 
+// ════════════════════════════════════════════════
+//  CHANGER MOT DE PASSE
+// ════════════════════════════════════════════════
+async function changePassword(){
+  const p1 = document.getElementById('new-pass-1').value;
+  const p2 = document.getElementById('new-pass-2').value;
+  const errEl = document.getElementById('pass-err');
+  const okEl  = document.getElementById('pass-ok');
+  const btn   = document.getElementById('btn-change-pass');
+
+  errEl.style.display='none';
+  okEl.style.display='none';
+
+  if(!p1||!p2){ errEl.textContent='Remplissez les deux champs.'; errEl.style.display='block'; return; }
+  if(p1.length<6){ errEl.textContent='Le mot de passe doit faire au moins 6 caractères.'; errEl.style.display='block'; return; }
+  if(p1!==p2){ errEl.textContent='Les deux mots de passe ne correspondent pas.'; errEl.style.display='block'; return; }
+
+  btn.disabled=true; btn.textContent='Mise à jour…';
+  const { error } = await sb.auth.updateUser({ password: p1 });
+  btn.disabled=false; btn.textContent='🔑 Mettre à jour';
+
+  if(error){
+    errEl.textContent='Erreur : '+error.message;
+    errEl.style.display='block';
+  } else {
+    okEl.style.display='block';
+    document.getElementById('new-pass-1').value='';
+    document.getElementById('new-pass-2').value='';
+    setTimeout(()=>okEl.style.display='none', 4000);
+  }
+}
+
 // ── SERVICE WORKER (PWA) ──
 if('serviceWorker' in navigator){
   navigator.serviceWorker.register('sw.js').catch(()=>{});
@@ -2171,7 +2215,7 @@ function installPWA(){
   deferredPrompt.userChoice.then(()=>{
     deferredPrompt=null;
     document.getElementById('install-banner')?.remove();
-    toast('✅ ✅ App installée !');
+    toast('✅ App installée !');
   });
 }
 </script>
