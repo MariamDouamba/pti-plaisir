@@ -16,7 +16,7 @@
 
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <!-- Supabase -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.3/dist/umd/supabase.js"></script>
 <!-- jsPDF pour génération PDF -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <!-- SheetJS pour export Excel -->
@@ -353,11 +353,11 @@ select option{background:#1d1710;}
     <div style="display:flex;flex-direction:column;gap:12px;">
       <div class="fg">
         <label>Email</label>
-        <input id="l-email" type="email" placeholder="vendeur@pti-plaisir.com" autocomplete="email">
+        <input id="l-email" type="email" placeholder="votre@email.com" autocomplete="email" onkeydown="if(event.key==='Enter')doLogin()">
       </div>
       <div class="fg">
         <label>Mot de passe</label>
-        <input id="l-pass" type="password" placeholder="••••••••" autocomplete="current-password">
+        <input id="l-pass" type="password" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()">
       </div>
       <button class="btn btn-primary" id="btn-login" onclick="doLogin()" style="width:100%;justify-content:center;margin-top:6px;">
         Se connecter
@@ -768,12 +768,27 @@ async function doLogin(){
   const email = document.getElementById('l-email').value.trim();
   const pass  = document.getElementById('l-pass').value;
   const btn   = document.getElementById('btn-login');
-  const err   = document.getElementById('login-err');
   if(!email||!pass){ showErr('Remplissez email et mot de passe'); return; }
   btn.disabled = true; btn.textContent = 'Connexion…';
-  const { data, error } = await sb.auth.signInWithPassword({ email, password: pass });
-  if(error){ showErr('Email ou mot de passe incorrect'); btn.disabled=false; btn.textContent='Se connecter'; return; }
-  await onLogin(data.user);
+  try {
+    const { data, error } = await sb.auth.signInWithPassword({ email, password: pass });
+    console.log('Login result:', data, error);
+    if(error){
+      showErr('Erreur : ' + error.message);
+      btn.disabled=false; btn.textContent='Se connecter';
+      return;
+    }
+    if(!data?.user){
+      showErr('Aucun utilisateur retourné — vérifiez vos identifiants');
+      btn.disabled=false; btn.textContent='Se connecter';
+      return;
+    }
+    await onLogin(data.user);
+  } catch(e) {
+    console.error('Login exception:', e);
+    showErr('Erreur de connexion : ' + e.message);
+    btn.disabled=false; btn.textContent='Se connecter';
+  }
 }
 
 function showErr(msg){
