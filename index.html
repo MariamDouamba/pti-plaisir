@@ -1836,7 +1836,7 @@ function checkCreditAlerts(){
   }
   if(bientot.length){
     msg+=`<strong>📅 ${bientot.length} crédit(s) à échéance dans 3 jours :</strong> `;
-    msg+=bientot.map(a=>`${a.client} (${a.diff===0?'aujourd'hui':a.diff+' j'})`).join(', ')+'.';
+    msg+=bientot.map(a=>`${a.client} (${a.diff===0?"aujourd'hui":a.diff+' j'})`).join(', ')+'.';
   }
 
   document.getElementById('credit-alert-text').innerHTML=msg;
