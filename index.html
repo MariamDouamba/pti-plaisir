@@ -410,7 +410,10 @@ select option{background:#1d1710;}
     <div class="srow">
       <input class="sinput" id="h-search" type="text" placeholder="🔍 Client, date, réf…" oninput="renderHisto()">
       <select id="h-pay" onchange="renderHisto()" style="width:auto;">
-        <option value="">Tous</option><option>Espèces</option><option>Mobile Money</option><option value="Crédit">Crédit</option>
+        <option value="">Tous paiements</option><option>Espèces</option><option>Mobile Money</option><option value="Crédit">Crédit</option>
+      </select>
+      <select id="h-vendeur" onchange="renderHisto()" style="width:auto;display:none;">
+        <option value="">Tous vendeurs</option>
       </select>
     </div>
     <div id="h-list" class="vlist"></div>
@@ -473,19 +476,21 @@ select option{background:#1d1710;}
       </div>
     </div>
     <div class="fcard" id="patron-section" style="display:none;">
-      <div class="stitle">⚙️ Gestion vendeurs (Patron)</div>
-      <div id="vendeurs-list" style="margin-bottom:14px;"></div>
+      <div class="stitle">👥 Mes Vendeurs</div>
+      <div id="vendeurs-list" style="margin-bottom:18px;"></div>
+      <div class="stitle" style="margin-top:8px;">➕ Créer un nouveau vendeur</div>
       <div class="fgrid">
-        <div class="fg"><label>Email nouveau vendeur</label><input id="new-vendeur-email" type="email" placeholder="vendeur@email.com"></div>
-        <div class="fg"><label>Nom</label><input id="new-vendeur-nom" type="text" placeholder="Prénom Nom"></div>
-        <div class="fg"><label>Mot de passe</label><input id="new-vendeur-pass" type="password" placeholder="Mot de passe"></div>
+        <div class="fg"><label>Prénom &amp; Nom *</label><input id="new-vendeur-nom" type="text" placeholder="Ex : Aminata Koné"></div>
+        <div class="fg"><label>Email *</label><input id="new-vendeur-email" type="email" placeholder="vendeur@gmail.com"></div>
+        <div class="fg"><label>Mot de passe *</label><input id="new-vendeur-pass" type="password" placeholder="Min. 6 caractères"></div>
         <div class="fg"><label>Rôle</label>
           <select id="new-vendeur-role"><option value="vendeur">Vendeur</option><option value="patron">Patron</option></select>
         </div>
       </div>
       <div class="btn-row">
-        <button class="btn btn-primary btn-sm" onclick="createVendeur()">➕ Créer compte vendeur</button>
+        <button class="btn btn-primary btn-sm" id="btn-create-vendeur" onclick="createVendeur()">➕ Créer le compte</button>
       </div>
+      <div id="vendeur-success" style="display:none;margin-top:12px;background:rgba(77,122,90,.15);border:1px solid rgba(77,122,90,.3);border-radius:var(--r2);padding:12px;font-size:.82rem;color:var(--green-l);line-height:1.6;"></div>
     </div>
     <div class="fcard">
       <div class="stitle">Catégories tissu</div>
@@ -869,12 +874,14 @@ function fillClientsDl(){
 function renderHisto(){
   const q=(document.getElementById('h-search').value||'').toLowerCase();
   const fp=document.getElementById('h-pay').value;
+  const fv=document.getElementById('h-vendeur').value;
   const list=document.getElementById('h-list');
 
   const items=_ventes.filter(v=>{
     const ms=!q||(v.client_nom.toLowerCase().includes(q)||v.date_vente.includes(q)||(v.ref||'').toLowerCase().includes(q)||v.id.toLowerCase().includes(q));
     const mp=!fp||v.paiement===fp;
-    return ms&&mp;
+    const mv=!fv||v.vendeur_id===fv;
+    return ms&&mp&&mv;
   });
 
   if(!items.length){list.innerHTML=`<div class="empty"><div class="empty-ico">📭</div><div class="empty-txt">Aucune vente trouvée</div></div>`;return;}
@@ -882,9 +889,9 @@ function renderHisto(){
     const isNew=isNewClient(v.client_nom);
     return`<div class="vcard" onclick="openDetail('${v.id}')">
       <div class="vcard-left">
-        <div class="vcard-id">${v.id}${v.ref?' · '+v.ref:''} ${v.vendeur_nom?'· '+v.vendeur_nom:''}</div>
+        <div class="vcard-id">${v.id}${v.ref?' · '+v.ref:''}</div>
         <div class="vcard-client">${esc(v.client_nom)}<span class="badge ${isNew?'b-new':'b-loyal'}">${isNew?'Nouveau':'Fidèle'}</span>${v.statut_paiement==='crédit'?'<span class="badge b-credit">Crédit</span>':''}</div>
-        <div class="vcard-meta">📅 ${fmtDate(v.date_vente)} · ${v.paiement}</div>
+        <div class="vcard-meta">📅 ${fmtDate(v.date_vente)} · ${v.paiement}${v.vendeur_nom?' · 👤 '+v.vendeur_nom:''}</div>
       </div>
       <div class="vcard-right">
         <div class="vcard-total">${fmt(v.total)}</div>
@@ -1431,22 +1438,48 @@ async function removeCat(i){
 // ════════════════════════════════════════════════
 //  GESTION VENDEURS (Patron)
 // ════════════════════════════════════════════════
+let _vendeurs=[];
+
 async function loadVendeurs(){
   const {data}=await sb.from('profils').select('*').order('created_at');
   if(!data)return;
-  document.getElementById('vendeurs-list').innerHTML=data.length?`
-    <table style="width:100%;font-size:.8rem;border-collapse:collapse;">
-      <tr style="color:var(--txt-m);font-size:.65rem;text-transform:uppercase;border-bottom:1px solid var(--border)">
-        <th style="text-align:left;padding:4px 8px">Nom</th>
-        <th style="padding:4px 8px">Rôle</th>
-        <th style="padding:4px 8px">Statut</th>
-      </tr>
-      ${data.map(v=>`<tr style="border-bottom:1px solid var(--border)">
-        <td style="padding:6px 8px;color:var(--txt)">${esc(v.nom)}</td>
-        <td style="padding:6px 8px;text-align:center"><span class="badge ${v.role==='patron'?'b-loyal':'b-new'}">${v.role}</span></td>
-        <td style="padding:6px 8px;text-align:center"><span class="badge ${v.actif?'b-stock-ok':'b-credit'}">${v.actif?'Actif':'Inactif'}</span></td>
-      </tr>`).join('')}
-    </table>`:'<div style="color:var(--txt-m);font-size:.8rem">Aucun vendeur</div>';
+  _vendeurs=data;
+  // Rempli le filtre vendeur dans historique
+  const sel=document.getElementById('h-vendeur');
+  if(sel){
+    sel.style.display='';
+    const cur=sel.value;
+    sel.innerHTML='<option value="">Tous vendeurs</option>'+data.map(v=>`<option value="${v.id}">${esc(v.nom)}</option>`).join('');
+    sel.value=cur;
+  }
+  // Affiche la liste
+  document.getElementById('vendeurs-list').innerHTML=data.length?
+    data.map(v=>`
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border);">
+        <div>
+          <div style="font-weight:600;color:var(--txt);font-size:.88rem;">${esc(v.nom)}</div>
+          <div style="font-size:.72rem;color:var(--txt-m);margin-top:2px;">
+            <span class="badge ${v.role==='patron'?'b-loyal':'b-new'}" style="margin-left:0">${v.role}</span>
+            <span class="badge ${v.actif?'b-stock-ok':'b-credit'}" style="margin-left:4px">${v.actif?'Actif':'Inactif'}</span>
+          </div>
+        </div>
+        ${v.id!==currentUser?.id?`
+          <div style="display:flex;gap:6px;">
+            <button class="btn btn-sm ${v.actif?'btn-red':'btn-green'}" onclick="toggleVendeur('${v.id}',${v.actif})">
+              ${v.actif?'🔒 Désactiver':'🔓 Réactiver'}
+            </button>
+          </div>`:
+          '<div style="font-size:.72rem;color:var(--txt-m)">Vous</div>'}
+      </div>`).join('')
+    :'<div style="color:var(--txt-m);font-size:.8rem;padding:10px 0;">Aucun vendeur</div>';
+}
+
+async function toggleVendeur(id, actuel){
+  const action = actuel ? 'désactiver' : 'réactiver';
+  if(!confirm(`Voulez-vous ${action} ce vendeur ?`)) return;
+  await sb.from('profils').update({actif:!actuel}).eq('id',id);
+  toast(actuel?'🔒 Vendeur désactivé':'🔓 Vendeur réactivé');
+  loadVendeurs();
 }
 
 async function createVendeur(){
@@ -1455,12 +1488,23 @@ async function createVendeur(){
   const pass=document.getElementById('new-vendeur-pass').value;
   const role=document.getElementById('new-vendeur-role').value;
   if(!email||!nom||!pass){ toast('⚠️ Remplissez tous les champs'); return; }
-  // Note: création via signUp — en production utiliser Admin API
+  if(pass.length<6){ toast('⚠️ Mot de passe : 6 caractères minimum'); return; }
+  const btn=document.getElementById('btn-create-vendeur');
+  btn.disabled=true; btn.textContent='Création…';
   const {data,error}=await sb.auth.signUp({email,password:pass});
+  btn.disabled=false; btn.textContent='➕ Créer le compte';
   if(error){ toast('❌ '+error.message); return; }
   if(data.user){
-    await sb.from('profils').insert({id:data.user.id,nom,role});
-    toast('✅ Compte vendeur créé !');
+    await sb.from('profils').insert({id:data.user.id,nom,role,actif:true});
+    // Affiche les infos à transmettre au vendeur
+    const succ=document.getElementById('vendeur-success');
+    succ.style.display='block';
+    succ.innerHTML=`✅ Compte créé ! Transmettez ces informations au vendeur :<br><br>
+      🔗 <strong>Lien :</strong> https://MariamDouamba.github.io/pti-plaisir<br>
+      📧 <strong>Email :</strong> ${email}<br>
+      🔑 <strong>Mot de passe :</strong> ${pass}<br><br>
+      <em style="color:var(--txt-m);font-size:.75rem;">Conseil : demandez-lui de changer son mot de passe à la première connexion.</em>`;
+    setTimeout(()=>succ.style.display='none', 30000);
     loadVendeurs();
     ['new-vendeur-email','new-vendeur-nom','new-vendeur-pass'].forEach(i=>document.getElementById(i).value='');
   }
