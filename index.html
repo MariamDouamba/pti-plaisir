@@ -345,6 +345,35 @@ select option{background:#1d1710;}
   </div>
 </div>
 
+<!-- Écran premier démarrage -->
+<div id="setup-screen" style="display:none;position:fixed;inset:0;z-index:1001;background:#000;display:none;align-items:center;justify-content:center;padding:20px;">
+  <div class="login-box" style="max-width:420px;">
+    <img src="logo.jpeg" alt="Pti-plaisir" style="width:100%;max-width:260px;display:block;margin:0 auto 20px;">
+    <div style="text-align:center;margin-bottom:20px;">
+      <div style="font-size:.7rem;letter-spacing:2px;text-transform:uppercase;color:var(--gold);margin-bottom:6px;">Premier démarrage</div>
+      <div style="font-size:.82rem;color:var(--txt-d);line-height:1.6;">Bienvenue ! Créez votre compte patron pour commencer.</div>
+    </div>
+    <div id="setup-err" style="display:none;background:rgba(184,80,48,.15);border:1px solid rgba(184,80,48,.3);color:var(--terra-l);border-radius:var(--r2);padding:10px 14px;font-size:.82rem;margin-bottom:14px;"></div>
+    <div style="display:flex;flex-direction:column;gap:12px;">
+      <div class="fg">
+        <label>Votre nom *</label>
+        <input id="s-nom" type="text" placeholder="Ex : Aminata Koné" autocomplete="name">
+      </div>
+      <div class="fg">
+        <label>Email *</label>
+        <input id="s-email" type="email" placeholder="votre@email.com" autocomplete="email">
+      </div>
+      <div class="fg">
+        <label>Mot de passe *</label>
+        <input id="s-pass" type="password" placeholder="Min. 6 caractères" autocomplete="new-password">
+      </div>
+      <button class="btn btn-primary" id="btn-setup" onclick="doSetup()" style="width:100%;justify-content:center;margin-top:4px;">
+        Créer mon compte patron
+      </button>
+    </div>
+  </div>
+</div>
+
 <div id="login-screen">
   <div class="login-box">
     <img src="logo.jpeg" alt="Pti-plaisir" style="width:100%;max-width:260px;display:block;margin:0 auto 24px;">
@@ -634,6 +663,41 @@ select option{background:#1d1710;}
         <button class="btn btn-ghost btn-sm" onclick="addCat()">Ajouter</button>
       </div>
     </div>
+    <div class="fcard" id="reset-section" style="display:none;border-color:rgba(184,80,48,.3);">
+      <div class="stitle" style="color:var(--terra-l);">⚠️ Zone de danger — Réinitialisation</div>
+      <div style="font-size:.8rem;color:var(--txt-d);margin-bottom:16px;line-height:1.6;background:rgba(184,80,48,.08);border:1px solid rgba(184,80,48,.2);border-radius:var(--r2);padding:10px 12px;">
+        Ces actions sont <strong style="color:var(--terra-l);">irréversibles</strong>. Les données supprimées ne peuvent pas être récupérées.
+      </div>
+      <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:16px;">
+        <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-size:.85rem;">
+          <input type="checkbox" id="reset-ventes" style="accent-color:var(--terra);width:16px;height:16px;">
+          <span>Toutes les <strong>ventes</strong> et leurs articles</span>
+        </label>
+        <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-size:.85rem;">
+          <input type="checkbox" id="reset-credits" style="accent-color:var(--terra);width:16px;height:16px;">
+          <span>Tous les <strong>crédits</strong> et remboursements</span>
+        </label>
+        <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-size:.85rem;">
+          <input type="checkbox" id="reset-clients" style="accent-color:var(--terra);width:16px;height:16px;">
+          <span>Tous les <strong>clients</strong></span>
+        </label>
+        <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-size:.85rem;">
+          <input type="checkbox" id="reset-stock" style="accent-color:var(--terra);width:16px;height:16px;">
+          <span>Tout le <strong>stock</strong></span>
+        </label>
+        <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-size:.85rem;">
+          <input type="checkbox" id="reset-vendeurs" style="accent-color:var(--terra);width:16px;height:16px;">
+          <span>Tous les <strong>vendeurs</strong> (sauf toi)</span>
+        </label>
+      </div>
+      <div style="margin-bottom:14px;">
+        <label style="font-size:.78rem;color:var(--txt-d);display:block;margin-bottom:6px;">
+          Pour confirmer, tape <strong style="color:var(--terra-l);">RÉINITIALISER</strong> ci-dessous :
+        </label>
+        <input id="reset-confirm-input" type="text" placeholder="RÉINITIALISER" style="width:100%;padding:9px 12px;background:var(--surf2);border:1px solid rgba(184,80,48,.3);border-radius:var(--r2);color:var(--txt);font-size:.85rem;">
+      </div>
+      <button class="btn btn-red" id="btn-reset" onclick="resetData()">🗑️ Réinitialiser les données sélectionnées</button>
+    </div>
     <div class="fcard">
       <div class="stitle">📊 Export Excel</div>
       <div style="font-size:.8rem;color:var(--txt-d);margin-bottom:14px;line-height:1.6;">
@@ -834,6 +898,7 @@ async function onLogin(user){
   document.getElementById('user-pill').textContent = `👤 ${currentProfile.nom} · Déconnexion`;
   if(currentProfile.role === 'patron'){
     document.getElementById('patron-section').style.display = 'block';
+    document.getElementById('reset-section').style.display = 'block';
   } else {
     // Vendeur : cacher tableau de bord, stock, clients, boutique
     ['tab-dash','tab-stock','tab-clients','tab-params'].forEach(id=>{
@@ -849,6 +914,32 @@ async function onLogin(user){
   }
 }
 
+async function doSetup(){
+  const nom   = document.getElementById('s-nom').value.trim();
+  const email = document.getElementById('s-email').value.trim();
+  const pass  = document.getElementById('s-pass').value;
+  const errEl = document.getElementById('setup-err');
+  const showSetupErr = msg => { errEl.textContent = msg; errEl.style.display = 'block'; };
+
+  if(!nom || !email || !pass){ showSetupErr('Remplissez tous les champs.'); return; }
+  if(pass.length < 6){ showSetupErr('Mot de passe : 6 caractères minimum.'); return; }
+
+  const btn = document.getElementById('btn-setup');
+  btn.disabled = true; btn.textContent = 'Création…';
+
+  const { data, error } = await sb.auth.signUp({ email, password: pass });
+  if(error){
+    showSetupErr('Erreur : ' + error.message);
+    btn.disabled = false; btn.textContent = 'Créer mon compte patron';
+    return;
+  }
+  if(data.user){
+    await sb.from('profils').upsert({ id: data.user.id, nom, role: 'patron', actif: true });
+    document.getElementById('setup-screen').style.display = 'none';
+    await onLogin(data.user);
+  }
+}
+
 async function doLogout(){
   if(!confirm('Se déconnecter ?')) return;
   await sb.auth.signOut();
@@ -856,8 +947,19 @@ async function doLogout(){
 }
 
 // Vérif session au démarrage
-sb.auth.getSession().then(({ data }) => {
-  if(data.session) onLogin(data.session.user);
+sb.auth.getSession().then(async ({ data }) => {
+  if(data.session){
+    onLogin(data.session.user);
+  } else {
+    // Vérifier si un patron existe déjà
+    const { data: patrons } = await sb.from('profils').select('id').eq('role','patron').limit(1);
+    if(!patrons || patrons.length === 0){
+      // Premier démarrage : aucun patron → afficher l'écran de setup
+      document.getElementById('login-screen').style.display = 'none';
+      const s = document.getElementById('setup-screen');
+      s.style.display = 'flex';
+    }
+  }
 });
 
 // ════════════════════════════════════════════════
@@ -1757,6 +1859,57 @@ async function supprimerVendeur(id, nom){
   }
   toast(`🗑️ ${nom} supprimé`);
   loadVendeurs();
+}
+
+async function resetData(){
+  const doVentes   = document.getElementById('reset-ventes').checked;
+  const doCredits  = document.getElementById('reset-credits').checked;
+  const doClients  = document.getElementById('reset-clients').checked;
+  const doStock    = document.getElementById('reset-stock').checked;
+  const doVendeurs = document.getElementById('reset-vendeurs').checked;
+  const confirm    = document.getElementById('reset-confirm-input').value.trim();
+
+  if(!doVentes && !doCredits && !doClients && !doStock && !doVendeurs){
+    toast('⚠️ Cochez au moins une option.'); return;
+  }
+  if(confirm !== 'RÉINITIALISER'){
+    toast('⚠️ Tape exactement RÉINITIALISER pour confirmer.'); return;
+  }
+
+  const btn = document.getElementById('btn-reset');
+  btn.disabled = true; btn.textContent = 'Réinitialisation…';
+
+  try {
+    if(doVentes){
+      await sb.from('articles_vente').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+      await sb.from('ventes').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+    }
+    if(doCredits){
+      await sb.from('remboursements').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+      await sb.from('credits').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+    }
+    if(doClients){
+      await sb.from('clients').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+    }
+    if(doStock){
+      await sb.from('stock').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+    }
+    if(doVendeurs){
+      await sb.from('profils').delete().eq('role','vendeur');
+    }
+
+    toast('✅ Réinitialisation effectuée avec succès.');
+    document.getElementById('reset-confirm-input').value = '';
+    document.querySelectorAll('#reset-section input[type=checkbox]').forEach(c => c.checked = false);
+    // Recharger les données
+    await loadVentes();
+    renderHisto(); renderClients(); renderCredits(); renderStock(); refreshDash();
+    if(doVendeurs) loadVendeurs();
+  } catch(e) {
+    toast('❌ Erreur : ' + e.message);
+  }
+
+  btn.disabled = false; btn.textContent = '🗑️ Réinitialiser les données sélectionnées';
 }
 
 async function createVendeur(){
