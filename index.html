@@ -405,6 +405,7 @@ select option{background:#1d1710;}
     <img src="logo.jpeg" alt="Pti-plaisir" style="height:44px;object-fit:contain;">
   </div>
   <div class="topbar-right">
+    <button onclick="openModal('help-modal')" style="background:none;border:1px solid rgba(201,160,32,.3);border-radius:50%;width:30px;height:30px;color:var(--gold-l);font-size:.85rem;cursor:pointer;display:flex;align-items:center;justify-content:center;font-weight:700;transition:all .2s;" onmouseover="this.style.background='rgba(201,160,32,.1)'" onmouseout="this.style.background='none'">?</button>
     <div class="user-pill" id="user-pill" onclick="doLogout()">👤 — · Déconnexion</div>
   </div>
 </div>
@@ -804,6 +805,95 @@ select option{background:#1d1710;}
     <div class="modal-foot">
       <button class="btn btn-ghost btn-sm" onclick="closeModal('stock-modal')">Annuler</button>
       <button class="btn btn-primary btn-sm" onclick="saveStock()">💾 Sauvegarder</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL AIDE -->
+<div class="overlay" id="help-modal">
+  <div class="modal" style="max-width:500px;">
+    <div class="modal-head">
+      <div class="modal-title">Mode d'emploi</div>
+      <button class="btn btn-ghost btn-sm btn-icon" onclick="closeModal('help-modal')">✕</button>
+    </div>
+    <div class="modal-body" style="padding:0;">
+      <div style="padding:16px 18px;display:flex;flex-direction:column;gap:4px;" id="help-sections">
+
+        <details style="border-bottom:1px solid var(--border);padding:10px 0;" open>
+          <summary style="cursor:pointer;font-weight:600;color:var(--gold-l);font-size:.88rem;list-style:none;display:flex;align-items:center;gap:8px;">
+            <span>📊</span> Tableau de bord
+          </summary>
+          <div style="margin-top:10px;font-size:.8rem;color:var(--txt-d);line-height:1.7;padding-left:4px;">
+            Vue d'ensemble de votre boutique. Choisissez la période (Aujourd'hui, 7 jours, Ce mois, Année) pour voir le chiffre d'affaires, le nombre de ventes et les crédits en attente.
+          </div>
+        </details>
+
+        <details style="border-bottom:1px solid var(--border);padding:10px 0;">
+          <summary style="cursor:pointer;font-weight:600;color:var(--gold-l);font-size:.88rem;list-style:none;display:flex;align-items:center;gap:8px;">
+            <span>➕</span> Enregistrer une vente
+          </summary>
+          <div style="margin-top:10px;font-size:.8rem;color:var(--txt-d);line-height:1.7;padding-left:4px;">
+            1. Appuyez sur <strong style="color:var(--txt);">Vente</strong> dans la barre du bas.<br>
+            2. Entrez le nom du client et son numéro (optionnel).<br>
+            3. Ajoutez les articles vendus avec leur quantité et prix.<br>
+            4. Choisissez le mode de paiement : <em>comptant</em> ou <em>crédit</em>.<br>
+            5. Appuyez sur <strong style="color:var(--txt);">Valider la vente</strong> pour enregistrer et générer un reçu.
+          </div>
+        </details>
+
+        <details style="border-bottom:1px solid var(--border);padding:10px 0;">
+          <summary style="cursor:pointer;font-weight:600;color:var(--gold-l);font-size:.88rem;list-style:none;display:flex;align-items:center;gap:8px;">
+            <span>📋</span> Historique des ventes
+          </summary>
+          <div style="margin-top:10px;font-size:.8rem;color:var(--txt-d);line-height:1.7;padding-left:4px;">
+            Consultez toutes les ventes passées. Filtrez par client, date ou vendeur. Appuyez sur une vente pour voir son détail ou réimprimer le reçu.
+          </div>
+        </details>
+
+        <details style="border-bottom:1px solid var(--border);padding:10px 0;">
+          <summary style="cursor:pointer;font-weight:600;color:var(--gold-l);font-size:.88rem;list-style:none;display:flex;align-items:center;gap:8px;">
+            <span>💳</span> Crédits (dettes clients)
+          </summary>
+          <div style="margin-top:10px;font-size:.8rem;color:var(--txt-d);line-height:1.7;padding-left:4px;">
+            Liste de tous les clients qui doivent de l'argent. Le badge rouge sur l'onglet vous rappelle combien de crédits sont en attente.<br><br>
+            Pour enregistrer un remboursement : appuyez sur le client → <strong style="color:var(--txt);">Rembourser</strong> → entrez le montant reçu.
+          </div>
+        </details>
+
+        <details style="border-bottom:1px solid var(--border);padding:10px 0;">
+          <summary style="cursor:pointer;font-weight:600;color:var(--gold-l);font-size:.88rem;list-style:none;display:flex;align-items:center;gap:8px;">
+            <span>📦</span> Stock
+          </summary>
+          <div style="margin-top:10px;font-size:.8rem;color:var(--txt-d);line-height:1.7;padding-left:4px;">
+            Gérez votre inventaire de tissus. Ajoutez chaque tissu avec sa quantité, son prix d'achat et de vente, et un seuil d'alerte. Le badge <strong style="color:var(--terra-l);">!</strong> s'affiche quand un tissu est sous le seuil.
+          </div>
+        </details>
+
+        <details style="border-bottom:1px solid var(--border);padding:10px 0;">
+          <summary style="cursor:pointer;font-weight:600;color:var(--gold-l);font-size:.88rem;list-style:none;display:flex;align-items:center;gap:8px;">
+            <span>👥</span> Clients
+          </summary>
+          <div style="margin-top:10px;font-size:.8rem;color:var(--txt-d);line-height:1.7;padding-left:4px;">
+            Historique de chaque client : total dépensé, nombre de visites, dernière visite. Appuyez sur un client pour voir toutes ses ventes.
+          </div>
+        </details>
+
+        <details style="padding:10px 0;">
+          <summary style="cursor:pointer;font-weight:600;color:var(--gold-l);font-size:.88rem;list-style:none;display:flex;align-items:center;gap:8px;">
+            <span>⚙️</span> Ma Boutique (Paramètres)
+          </summary>
+          <div style="margin-top:10px;font-size:.8rem;color:var(--txt-d);line-height:1.7;padding-left:4px;">
+            <strong style="color:var(--txt);">Informations</strong> — nom de la boutique, propriétaire, slogan sur les reçus.<br>
+            <strong style="color:var(--txt);">Vendeurs</strong> — (patron uniquement) créez des comptes pour vos vendeurs.<br>
+            <strong style="color:var(--txt);">Catégories tissu</strong> — personnalisez les types de tissus proposés.<br>
+            <strong style="color:var(--txt);">Export Excel</strong> — téléchargez toutes vos données (ventes, clients, stock).
+          </div>
+        </details>
+
+      </div>
+      <div style="padding:14px 18px;border-top:1px solid var(--border);font-size:.72rem;color:var(--txt-m);text-align:center;line-height:1.6;">
+        Problème ? Contactez votre administrateur.
+      </div>
     </div>
   </div>
 </div>
