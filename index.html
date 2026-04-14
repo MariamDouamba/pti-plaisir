@@ -12,7 +12,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Pti-plaisir">
-<link rel="apple-touch-icon" href="https://placehold.co/192x192/c9913a/ffffff?text=PP">
+<link rel="apple-touch-icon" href="logo.jpeg">
 
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <!-- Supabase -->
@@ -25,8 +25,8 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <style>
 :root{
-  --bg:#080808;--surf:#111110;--surf2:#1a1a18;--surf3:#222220;
-  --border:#2c2818;--border2:#3c3820;
+  --bg:#000000;--surf:#0e0e0c;--surf2:#161614;--surf3:#1e1e1b;
+  --border:#252318;--border2:#352f18;
   --gold:#c9a020;--gold-l:#e8c840;--gold-d:#8a6810;--gold-glow:rgba(201,160,32,.12);
   --terra:#b85030;--terra-l:#d4694a;
   --green:#4d7a5a;--green-l:#63a075;
@@ -38,7 +38,7 @@
 html,body{height:100%;overflow:hidden;}
 body{font-family:'Outfit',sans-serif;background:var(--bg);color:var(--txt);display:flex;flex-direction:column;}
 body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
-  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='4' height='4'%3E%3Crect width='4' height='4' fill='%23080808'/%3E%3Ccircle cx='1' cy='1' r='.4' fill='%23ffffff08'/%3E%3Ccircle cx='3' cy='3' r='.4' fill='%23ffffff06'/%3E%3C/svg%3E");}
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='4' height='4'%3E%3Crect width='4' height='4' fill='%23000000'/%3E%3Ccircle cx='1' cy='1' r='.4' fill='%23ffffff06'/%3E%3Ccircle cx='3' cy='3' r='.4' fill='%23ffffff04'/%3E%3C/svg%3E");}
 
 /* ── LOGIN ── */
 #login-screen{
@@ -46,7 +46,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
   background:var(--bg);display:flex;align-items:center;justify-content:center;padding:20px;
 }
 .login-box{
-  background:var(--surf);border:1px solid var(--border);border-radius:var(--r);
+  background:#000000;border:1px solid rgba(201,160,32,.2);border-radius:var(--r);
   padding:36px 28px;width:100%;max-width:380px;
 }
 .login-brand{font-family:'Cormorant Garamond',serif;font-size:2.2rem;font-weight:700;color:var(--gold-l);text-align:center;margin-bottom:4px;}
@@ -55,13 +55,13 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
 .login-err{background:rgba(184,80,48,.15);border:1px solid rgba(184,80,48,.3);color:var(--terra-l);border-radius:var(--r2);padding:10px 14px;font-size:.82rem;margin-bottom:14px;display:none;}
 
 /* ── TOP BAR ── */
-.topbar{position:relative;z-index:50;flex-shrink:0;background:linear-gradient(to bottom,#161616,#101010);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 16px;height:56px;}
+.topbar{position:relative;z-index:50;flex-shrink:0;background:#000000;border-bottom:1px solid rgba(201,160,32,.25);display:flex;align-items:center;justify-content:space-between;padding:0 20px;height:60px;}
 .brand{font-family:'Cormorant Garamond',serif;font-size:1.45rem;font-weight:700;letter-spacing:-.5px;color:var(--gold-l);line-height:1;}
 .brand em{font-style:italic;color:var(--terra-l);}
 .brand-sub{font-size:.6rem;letter-spacing:2px;text-transform:uppercase;color:var(--txt-m);font-family:'Outfit',sans-serif;font-weight:500;}
 .topbar-right{display:flex;align-items:center;gap:10px;}
-.user-pill{font-size:.72rem;color:var(--txt-d);background:var(--surf2);border:1px solid var(--border);border-radius:20px;padding:4px 10px;cursor:pointer;}
-.user-pill:hover{border-color:var(--terra);color:var(--terra-l);}
+.user-pill{font-size:.72rem;color:var(--gold-l);background:transparent;border:1px solid rgba(201,160,32,.3);border-radius:20px;padding:5px 12px;cursor:pointer;letter-spacing:.3px;transition:all .2s;}
+.user-pill:hover{border-color:var(--gold-l);background:rgba(201,160,32,.08);color:#fff;}
 
 /* ── BOTTOM NAV ── */
 .bottomnav{position:relative;z-index:50;flex-shrink:0;background:#141109;border-top:1px solid var(--border);display:flex;align-items:stretch;height:58px;}
@@ -347,7 +347,7 @@ select option{background:#1d1710;}
 
 <div id="login-screen">
   <div class="login-box">
-    <img src="logo.jpeg" alt="Pti-plaisir" style="width:100%;max-width:260px;display:block;margin:0 auto 24px;border-radius:8px;">
+    <img src="logo.jpeg" alt="Pti-plaisir" style="width:100%;max-width:260px;display:block;margin:0 auto 24px;">
     <div class="login-err" id="login-err"></div>
     <div style="display:flex;flex-direction:column;gap:12px;">
       <div class="fg">
@@ -373,7 +373,7 @@ select option{background:#1d1710;}
 ══════════════════════════════════════ -->
 <div class="topbar">
   <div>
-    <img src="logo.jpeg" alt="Pti-plaisir" style="height:40px;object-fit:contain;border-radius:4px;">
+    <img src="logo.jpeg" alt="Pti-plaisir" style="height:44px;object-fit:contain;">
   </div>
   <div class="topbar-right">
     <div class="user-pill" id="user-pill" onclick="doLogout()">👤 — · Déconnexion</div>
